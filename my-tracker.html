@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>My Protocol Tracker</title>
+<style>
+  :root {
+    --bg: #f0f4f8;
+    --card: #ffffff;
+    --text: #1e293b;
+    --muted: #64748b;
+    --accent: #059669;
+    --accent2: #2563eb;
+    --accent3: #d97706;
+    --danger: #dc2626;
+    --soft: #f1f5f9;
+    --border: #e2e8f0;
+    --radius: 16px;
+    --shadow: 0 4px 24px rgba(0,0,0,0.06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+  body { background: var(--bg); color: var(--text); padding: 14px; max-width: 640px; margin: 0 auto; line-height: 1.5; }
+  h1 { font-size: 1.3rem; margin-bottom: 2px; }
+  .subtitle { color: var(--muted); font-size: 0.82rem; margin-bottom: 18px; }
+
+  .date-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; background: var(--card); padding: 10px 14px; border-radius: var(--radius); box-shadow: var(--shadow); }
+  .date-bar button { background: var(--soft); border: 1px solid var(--border); padding: 8px 14px; border-radius: 10px; cursor: pointer; font-size: 1.1rem; color: var(--text); }
+  .date-bar span { font-weight: 700; font-size: 1.05rem; }
+  .date-bar .day-tag { font-size: 0.75rem; color: var(--muted); font-weight: 500; }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; }
+  .tab { padding: 9px 16px; border-radius: 24px; border: 1px solid var(--border); background: var(--card); cursor: pointer; font-size: 0.88rem; font-weight: 500; white-space: nowrap; transition: .15s; }
+  .tab.active { background: var(--text); color: #fff; border-color: var(--text); }
+
+  .card { background: var(--card); border-radius: var(--radius); padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow); }
+  .card h2 { font-size: 1rem; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+  .card h2 .icon { font-size: 1.15rem; }
+  .card h3 { font-size: 0.9rem; margin: 14px 0 8px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+
+  .protocol-banner { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 1px solid #a7f3d0; border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; font-size: 0.85rem; color: #065f46; }
+  .protocol-banner.rest { background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-color: #fecaca; color: #991b1b; }
+  .protocol-banner.recovery { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-color: #bfdbfe; color: #1e40af; }
+  .protocol-banner.cheat { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-color: #fde68a; color: #92400e; }
+
+  .checklist { display: flex; flex-direction: column; gap: 8px; }
+  .check-item { display: flex; align-items: center; gap: 12px; padding: 11px; border-radius: 12px; background: var(--soft); cursor: pointer; transition: .15s; border: 1px solid transparent; }
+  .check-item:hover { border-color: var(--border); }
+  .check-item.done { opacity: .55; }
+  .check-item.done .check-text { text-decoration: line-through; color: var(--muted); }
+  .check-box { width: 24px; height: 24px; border: 2px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; color: #fff; flex-shrink: 0; transition: .15s; }
+  .check-item.done .check-box { background: var(--accent); border-color: var(--accent); }
+  .check-text { font-size: 0.92rem; }
+
+  .input-row { display: flex; gap: 8px; margin-top: 10px; }
+  input, textarea, select { flex: 1; padding: 11px 13px; border: 1px solid var(--border); border-radius: 12px; font-size: 1rem; background: var(--soft); color: var(--text); }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent2); background: #fff; }
+  input.cal-input { max-width: 90px; text-align: center; font-weight: 600; }
+  button.btn { background: var(--accent); color: #fff; border: none; padding: 11px 18px; border-radius: 12px; cursor: pointer; font-weight: 600; white-space: nowrap; font-size: 0.95rem; }
+  button.btn.blue { background: var(--accent2); }
+  button.btn.orange { background: var(--accent3); }
+  button.btn.red { background: var(--danger); }
+  button.btn.ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); font-weight: 500; }
+  button.btn.small { padding: 7px 12px; font-size: 0.82rem; border-radius: 8px; }
+
+  .meal-slot { background: var(--soft); border-radius: 12px; padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); }
+  .meal-slot-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .meal-slot-name { font-weight: 600; font-size: 0.92rem; }
+  .meal-slot-time { font-size: 0.75rem; color: var(--muted); background: #fff; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); }
+  .meal-slot-row { display: flex; gap: 8px; }
+  .meal-slot-row input:first-child { flex: 1; }
+  .meal-slot-row input.cal-input { flex: 0 0 90px; }
+  .meal-slot-cal { font-size: 0.8rem; color: var(--muted); margin-top: 6px; text-align: right; }
+  .meal-slot-cal span { font-weight: 700; color: var(--accent); }
+
+  .calorie-bar-wrap { background: var(--soft); border-radius: 14px; height: 32px; overflow: hidden; position: relative; margin-bottom: 8px; }
+  .calorie-bar-fill { height: 100%; border-radius: 14px; transition: width .4s ease, background .3s; display: flex; align-items: center; justify-content: flex-end; padding-right: 12px; }
+  .calorie-bar-fill.under { background: linear-gradient(90deg, #3b82f6, #06b6d4); }
+  .calorie-bar-fill.over { background: linear-gradient(90deg, #f59e0b, #ef4444); }
+  .calorie-bar-fill span { font-size: 0.78rem; color: #fff; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.2); white-space: nowrap; }
+  .calorie-summary { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 14px; }
+  .calorie-summary .target { color: var(--muted); }
+  .calorie-summary .actual { font-weight: 700; }
+  .calorie-summary .actual.under { color: var(--accent2); }
+  .calorie-summary .actual.over { color: var(--danger); }
+
+  .list { display: flex; flex-direction: column; gap: 8px; }
+  .list-item { display: flex; justify-content: space-between; align-items: center; padding: 11px 13px; background: var(--soft); border-radius: 12px; font-size: 0.92rem; }
+  .list-item small { color: var(--muted); font-size: 0.72rem; display: block; margin-top: 3px; }
+  .list-item button { background: transparent; border: none; color: var(--danger); cursor: pointer; font-size: 1.05rem; padding: 2px 6px; }
+
+  .water-tracker { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .water-bar { flex: 1; height: 28px; background: var(--soft); border-radius: 14px; overflow: hidden; position: relative; }
+  .water-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #06b6d4); border-radius: 14px; transition: width .4s ease; display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; }
+  .water-fill span { font-size: 0.72rem; color: #fff; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+  .water-controls { display: flex; gap: 6px; }
+
+  .sleep-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .sleep-inputs label { font-size: 0.78rem; color: var(--muted); margin-bottom: 4px; display: block; }
+
+  .macro-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .macro-box { text-align: center; padding: 12px 8px; background: var(--soft); border-radius: 12px; cursor: pointer; transition: .15s; border: 2px solid transparent; }
+  .macro-box:hover { border-color: var(--border); }
+  .macro-box.active { border-color: var(--accent); background: #ecfdf5; }
+  .macro-box .pct { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+  .macro-box .lbl { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+
+  .note-box { width: 100%; min-height: 90px; resize: vertical; font-size: 0.92rem; }
+
+  .sop-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 12px; font-size: 0.82rem; color: #78350f; margin-bottom: 12px; }
+  .sop-box b { color: #92400e; }
+
+  .empty { text-align: center; color: var(--muted); padding: 18px; font-size: 0.88rem; }
+
+  .progress-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .stat { background: var(--card); padding: 14px; border-radius: var(--radius); text-align: center; box-shadow: var(--shadow); }
+  .stat .num { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+  .stat .label { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+
+  .week-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-bottom: 12px; }
+  .week-table th { background: var(--soft); padding: 10px 8px; text-align: left; font-weight: 600; color: var(--muted); border-bottom: 2px solid var(--border); }
+  .week-table td { padding: 10px 8px; border-bottom: 1px solid var(--border); }
+  .week-table td:last-child { text-align: right; font-weight: 600; }
+  .week-table .under { color: var(--accent2); }
+  .week-table .over { color: var(--danger); }
+  .week-table .good { color: var(--accent); }
+
+  .section-divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; margin-left: 6px; }
+  .badge.green { background: #d1fae5; color: #065f46; }
+  .badge.blue { background: #dbeafe; color: #1e40af; }
+  .badge.orange { background: #ffedd5; color: #9a3412; }
+
+  .export-row { display: flex; gap: 8px; margin-top: 10px; }
+  .export-row button { flex: 1; padding: 10px; border: 1px solid var(--border); background: var(--card); border-radius: 10px; cursor: pointer; font-size: 0.82rem; color: var(--text); }
+
+  .incline-display { text-align: center; padding: 14px; background: var(--soft); border-radius: 12px; margin-bottom: 12px; }
+  .incline-display .big { font-size: 2rem; font-weight: 700; color: var(--accent2); }
+  .incline-display .small { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+
+  @media (max-width: 480px) {
+    body { padding: 10px; }
+    .sleep-inputs { grid-template-columns: 1fr; }
+    .macro-grid { grid-template-columns: 1fr; }
+    .meal-slot-row { flex-wrap: wrap; }
+    .meal-slot-row input.cal-input { flex: 0 0 80px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>📋 My Protocol</h1>
+<div class="subtitle">120 kg • Corporate Legal • Joint-Safe • Consistency > Intensity</div>
+
+<div class="date-bar">
+  <button onclick="changeDay(-1)">◀</button>
+  <div style="text-align:center">
+    <span id="currentDate">Today</span>
+    <div class="day-tag" id="dayType">Active Day</div>
+  </div>
+  <button onclick="changeDay(1)">▶</button>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('today',this)">📋 Today</div>
+  <div class="tab" onclick="switchTab('week',this)">📊 Week</div>
+  <div class="tab" onclick="switchTab('progress',this)">📈 All Time</div>
+  <div class="tab" onclick="switchTab('settings',this)">⚙️ Protocol</div>
+</div>
+
+<!-- ==================== TODAY TAB ==================== -->
+<div id="tab-today">
+
+  <!-- PROTOCOL BANNER -->
+  <div id="protocolBanner" class="protocol-banner"></div>
+
+  <!-- WORKOUT SECTION -->
+  <div class="card">
+    <h2><span class="icon">🏋️</span> Workout <span id="workoutBadge" class="badge green">Mon/Wed/Fri</span></h2>
+
+    <div id="activeWorkoutPanel">
+      <div class="incline-display">
+        <div class="big" id="inclineDisplay">6%</div>
+        <div class="small">Current Treadmill Incline (Max 12%)</div>
+      </div>
+      <div class="checklist" id="workoutChecks"></div>
+      <div class="input-row" style="margin-top:12px">
+        <input type="text" id="workoutInput" placeholder="Log actuals (e.g. Treadmill 30min felt good)" onkeydown="if(event.key==='Enter')addWorkoutLog()">
+        <button class="btn blue" onclick="addWorkoutLog()">Log</button>
+      </div>
+      <div class="list" id="workoutList" style="margin-top:10px"></div>
+
+      <div class="section-divider"></div>
+      <button class="btn small ghost" style="width:100%" onclick="triggerMinimalist()">🛡️ 5-Min Minimalist Fallback (High Stress Day)</button>
+      <div id="minimalistNote" style="display:none;margin-top:10px;padding:10px;background:#eff6ff;border-radius:10px;font-size:0.82rem;color:#1e40af;border:1px solid #bfdbfe">
+        <b>Streak maintained.</b> 10 min flat walking, 0% incline. The goal is behavioral consistency, not calorie burn. You showed up. That is the win.
+      </div>
+    </div>
+
+    <div id="recoveryPanel" style="display:none">
+      <div class="checklist" id="recoveryChecks"></div>
+      <div class="input-row" style="margin-top:12px">
+        <input type="text" id="recoveryInput" placeholder="Log recovery activity..." onkeydown="if(event.key==='Enter')addRecoveryLog()">
+        <button class="btn blue" onclick="addRecoveryLog()">Log</button>
+      </div>
+      <div class="list" id="recoveryList" style="margin-top:10px"></div>
+    </div>
+
+    <div id="restPanel" style="display:none">
+      <div class="empty">🛌 Absolute Rest Day. Mental decompression only. No physical work.</div>
+      <div class="input-row" style="margin-top:10px">
+        <input type="text" id="restInput" placeholder="Optional: what did you do for rest?" onkeydown="if(event.key==='Enter')addRestLog()">
+        <button class="btn ghost" onclick="addRestLog()">Log</button>
+      </div>
+      <div class="list" id="restList" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <!-- MEAL SECTION -->
+  <div class="card">
+    <h2><span class="icon">🍽️</span> Meals & Calories <span id="mealBadge" class="badge green">Target 2200</span></h2>
+
+    <!-- Calorie Bar -->
+    <div class="calorie-bar-wrap">
+      <div class="calorie-bar-fill under" id="calorieBar" style="width:0%"><span id="calorieBarText">0 / 2200 kcal</span></div>
+    </div>
+    <div class="calorie-summary">
+      <span class="target">Target: 2,200 kcal</span>
+      <span class="actual under" id="calorieSummary">0 consumed</span>
+    </div>
+
+    <div id="normalMealPanel">
+      <h3>🍽️ Daily Meals (3 + 2 Snacks)</h3>
+
+      <div class="meal-slot">
+        <div class="meal-slot-header">
+          <span class="meal-slot-name">🌅 Breakfast</span>
+          <span class="meal-slot-time">07:00</span>
+        </div>
+        <div class="meal-slot-row">
+          <input type="text" id="mBreakfastText" placeholder="What did you eat?" onchange="saveMeal('breakfast')">
+          <input type="number" class="cal-input" id="mBreakfastCal" placeholder="kcal" onchange="saveMeal('breakfast')">
+        </div>
+        <div class="meal-slot-cal">Calories: <span id="valBreakfast">0</span> kcal</div>
+      </div>
+
+      <div class="meal-slot">
+        <div class="meal-slot-header">
+          <span class="meal-slot-name">🍎 Snack 1</span>
+          <span class="meal-slot-time">10:00</span>
+        </div>
+        <div class="meal-slot-row">
+          <input type="text" id="mSnack1Text" placeholder="What did you eat?" onchange="saveMeal('snack1')">
+          <input type="number" class="cal-input" id="mSnack1Cal" placeholder="kcal" onchange="saveMeal('snack1')">
+        </div>
+        <div class="meal-slot-cal">Calories: <span id="valSnack1">0</span> kcal</div>
+      </div>
+
+      <div class="meal-slot">
+        <div class="meal-slot-header">
+          <span class="meal-slot-name">🍱 Lunch</span>
+          <span class="meal-slot-time">12:00</span>
+        </div>
+        <div class="meal-slot-row">
+          <input type="text" id="mLunchText" placeholder="What did you eat?" onchange="saveMeal('lunch')">
+          <input type="number" class="cal-input" id="mLunchCal" placeholder="kcal" onchange="saveMeal('lunch')">
+        </div>
+        <div class="meal-slot-cal">Calories: <span id="valLunch">0</span> kcal</div>
+      </div>
+
+      <div class="meal-slot">
+        <div class="meal-slot-header">
+          <span class="meal-slot-name">🍪 Snack 2</span>
+          <span class="meal-slot-time">15:00</span>
+        </div>
+        <div class="meal-slot-row">
+          <input type="text" id="mSnack2Text" placeholder="What did you eat?" onchange="saveMeal('snack2')">
+          <input type="number" class="cal-input" id="mSnack2Cal" placeholder="kcal" onchange="saveMeal('snack2')">
+        </div>
+        <div class="meal-slot-cal">Calories: <span id="valSnack2">0</span> kcal</div>
+      </div>
+
+      <div class="meal-slot">
+        <div class="meal-slot-header">
+          <span class="meal-slot-name">🌙 Dinner</span>
+          <span class="meal-slot-time">19:00</span>
+        </div>
+        <div class="meal-slot-row">
+          <input type="text" id="mDinnerText" placeholder="What did you eat?" onchange="saveMeal('dinner')">
+          <input type="number" class="cal-input" id="mDinnerCal" placeholder="kcal" onchange="saveMeal('dinner')">
+        </div>
+        <div class="meal-slot-cal">Calories: <span id="valDinner">0</span> kcal</div>
+      </div>
+
+      <h3>🚫 Elimination Check</h3>
+      <div class="checklist" id="eliminationChecks"></div>
+    </div>
+
+    <div id="cheatMealPanel" style="display:none">
+      <div class="protocol-banner cheat">
+        <b>🍩 Sunday Cheat Meal Protocol</b><br>
+        Cheat MEAL, not cheat DAY. High-protein whole meal FIRST. Then controlled craving (max 2 donuts, or small sweet coffee 50% sugar).
+      </div>
+      <div class="checklist" id="cheatChecks"></div>
+
+      <h3 style="margin-top:14px">📝 Cheat Meal Log</h3>
+      <div class="list" id="cheatMealList" style="margin-top:10px"></div>
+      <div class="input-row">
+        <input type="text" id="cheatInput" placeholder="Log cheat meal..." onkeydown="if(event.key==='Enter')addCheatMeal()">
+        <button class="btn orange" onclick="addCheatMeal()">Log</button>
+      </div>
+    </div>
+
+    <!-- Binge SOP -->
+    <div class="section-divider"></div>
+    <div class="sop-box" id="bingeSop">
+      <b>🛡️ Post-Binge SOP ("Kelepasan")</b><br>
+      • NO fasting tomorrow • NO punishing workouts<br>
+      • Return immediately to standard 50/25/25 plate<br>
+      • Hyper-hydration: 4.0L+ water today/tomorrow<br>
+      • Post-mortem: What triggered it? (stress, skipped meal, fatigue?)
+    </div>
+    <div class="input-row">
+      <input type="text" id="bingeTriggerInput" placeholder="Post-mortem: What triggered the slip?" onkeydown="if(event.key==='Enter')addBingeNote()">
+      <button class="btn red" onclick="addBingeNote()">Note</button>
+    </div>
+    <div class="list" id="bingeNotesList" style="margin-top:8px"></div>
+  </div>
+
+  <!-- HABITS SECTION -->
+  <div class="card">
+    <h2><span class="icon">💧</span> Daily Habits</h2>
+
+    <h3>💧 Hydration (Goal: 3.5–4.0L)</h3>
+    <div class="water-tracker">
+      <div class="water-bar">
+        <div class="water-fill" id="waterFill" style="width:0%"><span id="waterText">0 / 4000 ml</span></div>
+      </div>
+      <div class="water-controls">
+        <button class="btn small" onclick="addWater(250)">+250ml</button>
+        <button class="btn small" onclick="addWater(500)">+500ml</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="btn small ghost" onclick="setWaterGoal(3500)">Goal: 3.5L</button>
+      <button class="btn small ghost" onclick="setWaterGoal(4000)">Goal: 4.0L</button>
+      <button class="btn small ghost" onclick="setWaterGoal(4500)">🚨 Post-Binge: 4.5L</button>
+    </div>
+
+    <h3>😴 Sleep (Goal: 7–8 hrs)</h3>
+    <div class="sleep-inputs">
+      <div>
+        <label>Bedtime</label>
+        <input type="time" id="sleepBed" onchange="saveSleep()">
+      </div>
+      <div>
+        <label>Wake time</label>
+        <input type="time" id="sleepWake" onchange="saveSleep()">
+      </div>
+    </div>
+    <div id="sleepCalc" style="font-size:0.88rem;color:var(--muted);margin-bottom:12px"></div>
+    <div class="checklist" id="sleepChecks"></div>
+  </div>
+
+  <!-- NOTES -->
+  <div class="card">
+    <h2><span class="icon">📝</span> Daily Notes</h2>
+    <textarea class="note-box" id="dayNote" placeholder="How did you feel? Energy levels? Joint pain? Stress level?" oninput="saveNote()"></textarea>
+  </div>
+</div>
+
+<!-- ==================== WEEK TAB ==================== -->
+<div id="tab-week" style="display:none">
+  <div class="card">
+    <h2><span class="icon">📊</span> This Week's Calories</h2>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <button class="btn small ghost" onclick="changeWeek(-1)">◀ Prev Week</button>
+      <span id="weekLabel" style="font-weight:600;font-size:0.95rem"></span>
+      <button class="btn small ghost" onclick="changeWeek(1)">Next Week ▶</button>
+    </div>
+
+    <div id="weekSummary" style="margin-bottom:16px"></div>
+
+    <table class="week-table">
+      <thead>
+        <tr><th>Day</th><th>Meals</th><th>Calories</th><th>vs Target</th></tr>
+      </thead>
+      <tbody id="weekTableBody"></tbody>
+    </table>
+
+    <div class="progress-grid" style="margin-top:10px">
+      <div class="stat"><div class="num" id="wkTotal">0</div><div class="label">Week Total (kcal)</div></div>
+      <div class="stat"><div class="num" id="wkAvg">0</div><div class="label">Daily Average</div></div>
+      <div class="stat"><div class="num" id="wkTarget">0</div><div class="label">Weekly Target</div></div>
+      <div class="stat"><div class="num" id="wkDiff">0</div><div class="label">Difference</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PROGRESS TAB ==================== -->
+<div id="tab-progress" style="display:none">
+  <div class="progress-grid">
+    <div class="stat"><div class="num" id="stWorkouts">0</div><div class="label">Workouts Done</div></div>
+    <div class="stat"><div class="num" id="stMeals">0</div><div class="label">Meals Logged</div></div>
+    <div class="stat"><div class="num" id="stWater">0</div><div class="label">Avg Water (L)</div></div>
+    <div class="stat"><div class="num" id="stSleep">0</div><div class="label">Sleep Met 7-8h</div></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="icon">📊</span> Protocol Compliance</h2>
+    <div class="list" id="complianceList"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="icon">📜</span> History</h2>
+    <div class="list" id="historyList"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="icon">💾</span> Backup & Restore</h2>
+    <p style="font-size:0.82rem;color:var(--muted);margin-bottom:10px">Your data stays on this device. Export to keep it safe.</p>
+    <div class="export-row">
+      <button onclick="downloadBackup()">⬇️ Download Backup</button>
+      <button onclick="document.getElementById('fileInput').click()">⬆️ Restore Backup</button>
+    </div>
+    <input type="file" id="fileInput" accept=".json" style="display:none" onchange="uploadBackup(event)">
+  </div>
+</div>
+
+<!-- ==================== SETTINGS TAB ==================== -->
+<div id="tab-settings" style="display:none">
+  <div class="card">
+    <h2><span class="icon">⚙️</span> Protocol Settings</h2>
+    <div style="margin-bottom:14px">
+      <label style="font-size:0.85rem;color:var(--muted);display:block;margin-bottom:6px">Daily Calorie Target</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="number" id="calTargetInput" value="2200" style="max-width:120px;text-align:center;font-weight:700" onchange="setCalorieTarget(this.value)">
+        <span style="font-size:0.85rem;color:var(--muted)">kcal / day</span>
+      </div>
+      <div style="font-size:0.78rem;color:var(--muted);margin-top:6px">Weekly target = <span id="weeklyTargetDisplay">15,400</span> kcal</div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <label style="font-size:0.85rem;color:var(--muted);display:block;margin-bottom:6px">Current Treadmill Incline</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn small ghost" onclick="adjustIncline(-2)">-2%</button>
+        <span id="settingsIncline" style="font-size:1.4rem;font-weight:700;color:var(--accent2);min-width:50px;text-align:center">6%</span>
+        <button class="btn small ghost" onclick="adjustIncline(2)">+2%</button>
+      </div>
+      <div style="font-size:0.78rem;color:var(--muted);margin-top:6px">Progression: +2% per week if zero joint pain & stable RPE. Ceiling: 12%</div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <label style="font-size:0.85rem;color:var(--muted);display:block;margin-bottom:6px">Daily Water Goal</label>
+      <div style="display:flex;gap:8px">
+        <button class="btn small" onclick="setGlobalWaterGoal(3500)">3.5L</button>
+        <button class="btn small" onclick="setGlobalWaterGoal(4000)">4.0L</button>
+        <button class="btn small" onclick="setGlobalWaterGoal(4500)">4.5L</button>
+      </div>
+      <div style="font-size:0.78rem;color:var(--muted);margin-top:6px">Default 4.0L optimized for 120kg metabolic rate</div>
+    </div>
+
+    <button class="btn red" style="width:100%" onclick="if(confirm('Clear ALL data? This cannot be undone.')){localStorage.removeItem('protocolData');location.reload();}">🗑️ Clear All Data</button>
+  </div>
+
+  <div class="card">
+    <h2><span class="icon">📖</span> Your Protocol Reference</h2>
+    <div style="font-size:0.85rem;line-height:1.7;color:var(--text)">
+      <b>Mon/Wed/Fri — Active Days</b><br>
+      • Treadmill: 6-3-30 (Incline <span class="inclineRef">6</span>%, Speed 3mph, 30min)<br>
+      • No handrail holding. Upright posture.<br>
+      • Swimming: 10 laps × 50m, 30-45s rest per lap<br>
+      • Sequence: Treadmill → Swimming<br><br>
+
+      <b>Tue/Thu/Sat — Recovery Days</b><br>
+      • 15-20 min casual walking (Zone 1)<br>
+      • 10 min stretch: calves, hamstrings, lower back<br>
+      • Track TIME, not steps<br><br>
+
+      <b>Sun — Absolute Rest</b><br>
+      • 100% physical off. Mental decompression.<br><br>
+
+      <b>Meals (Mon–Sat)</b><br>
+      • 50% Protein / 25% Whole Carbs / 25% Veg<br>
+      • No liquid calories, no ultra-processed meats<br>
+      • Sunday: Cheat MEAL (not day). Protein first.<br><br>
+
+      <b>Hydration</b><br>
+      • 3.5–4.0L daily. Post-binge: 4.0L+ flush.<br><br>
+
+      <b>Sleep</b><br>
+      • 7–8 hours. Critical for CNS recovery.<br><br>
+
+      <b>Anti All-or-Nothing</b><br>
+      • 5-Min Minimalist Rule: 10min flat walk maintains streak.<br>
+      • Post-binge: NO fasting, NO punishment. Return to protocol.
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==================== DATA & STATE ==================== */
+let data = JSON.parse(localStorage.getItem('protocolData')) || {};
+let currentOffset = 0;
+let weekOffset = 0;
+let globalIncline = data._settings?.incline || 6;
+let globalWaterGoal = data._settings?.waterGoal || 4000;
+let calorieTarget = data._settings?.calorieTarget || 2200;
+
+const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const MEAL_SLOTS = ['breakfast','snack1','lunch','snack2','dinner'];
+const MEAL_LABELS = { breakfast: '🌅 Breakfast', snack1: '🍎 Snack 1 (10:00)', lunch: '🍱 Lunch', snack2: '🍪 Snack 2 (15:00)', dinner: '🌙 Dinner' };
+const defaultHabits = [
+  "Drink 3.5–4.0L water",
+  "Sleep 7–8 hours",
+  "No sugary beverages / boba / soda",
+  "No ultra-processed meats (nuggets, sausages)",
+  "Reduce refined flour & deep-fried foods",
+  "Follow 50/25/25 plate allocation"
+];
+const eliminationItems = [
+  "No sugary drinks (soda, boba, sweet coffee)",
+  "No ultra-processed meats (nuggets, sausages)",
+  "Reduced refined flour (tepung olahan)",
+  "Reduced deep-fried foods (gorengan)"
+];
+const activeWorkoutChecks = [
+  "Treadmill: 6-3-30 (Incline "+globalIncline+"%, Speed 3mph, 30min)",
+  "Posture Guard: Upright, NO handrail holding",
+  "Swimming: 10 laps × 50m, 30-45s rest",
+  "Sequence: Treadmill → Swimming maintained",
+  "Zero joint/tendon pain today"
+];
+const recoveryChecks = [
+  "15–20 min casual walking (Zone 1/NEAT)",
+  "10 min stretch: calves, hamstrings, lower back",
+  "Time-tracked, NOT step-counted"
+];
+const cheatChecks = [
+  "High-protein whole meal consumed FIRST",
+  "Controlled portion (max 2 donuts OR small sweet coffee 50% sugar)",
+  "Cheat MEAL, not Cheat DAY"
+];
+
+function getDayKey(offset) {
+  const d = new Date(); d.setDate(d.getDate() + offset);
+  return d.toISOString().split('T')[0];
+}
+function getDayName(offset) {
+  const d = new Date(); d.setDate(d.getDate() + offset);
+  return DAYS[d.getDay()];
+}
+function ensureDay(key) {
+  if (!data[key]) {
+    data[key] = {
+      habits: {}, checks: {},
+      meals: {}, workouts: [], recovery: [], rest: [], cheatMeals: [],
+      water: 0, waterGoal: globalWaterGoal,
+      sleepBed: '', sleepWake: '', sleepChecks: {},
+      macros: {protein:false, carbs:false, veg:false},
+      elimination: {},
+      cheatChecks: {},
+      bingeNotes: [],
+      note: ""
+    };
+    MEAL_SLOTS.forEach(slot => {
+      data[key].meals[slot] = { text: '', calories: 0 };
+    });
+    defaultHabits.forEach((h,i)=>{ if(data[key].checks['h_'+i]===undefined) data[key].checks['h_'+i]=false; });
+    eliminationItems.forEach((h,i)=>{ if(data[key].elimination[i]===undefined) data[key].elimination[i]=false; });
+  }
+  // Migrate old format
+  if (Array.isArray(data[key].meals)) {
+    const old = data[key].meals;
+    data[key].meals = {};
+    MEAL_SLOTS.forEach((slot, idx) => {
+      data[key].meals[slot] = old[idx] || { text: '', calories: 0 };
+    });
+  }
+  if (!data[key].meals || typeof data[key].meals !== 'object') {
+    data[key].meals = {};
+    MEAL_SLOTS.forEach(slot => data[key].meals[slot] = { text: '', calories: 0 });
+  }
+  return data[key];
+}
+function save() {
+  if (!data._settings) data._settings = {};
+  data._settings.incline = globalIncline;
+  data._settings.waterGoal = globalWaterGoal;
+  data._settings.calorieTarget = calorieTarget;
+  localStorage.setItem('protocolData', JSON.stringify(data));
+  render();
+}
+
+/* ==================== NAVIGATION ==================== */
+function changeDay(dir) {
+  currentOffset += dir;
+  render();
+}
+function changeWeek(dir) {
+  weekOffset += dir;
+  renderWeek();
+}
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  else {
+    const tabs = ['today','week','progress','settings'];
+    const idx = tabs.indexOf(name);
+    if (idx >= 0) document.querySelectorAll('.tab')[idx].classList.add('active');
+  }
+  document.getElementById('tab-today').style.display = name==='today' ? 'block' : 'none';
+  document.getElementById('tab-week').style.display = name==='week' ? 'block' : 'none';
+  document.getElementById('tab-progress').style.display = name==='progress' ? 'block' : 'none';
+  document.getElementById('tab-settings').style.display = name==='settings' ? 'block' : 'none';
+  if (name==='week') renderWeek();
+  if (name==='progress') renderProgress();
+  if (name==='settings') renderSettings();
+}
+
+/* ==================== RENDER TODAY ==================== */
+function render() {
+  const key = getDayKey(currentOffset);
+  const day = ensureDay(key);
+  const dayName = getDayName(currentOffset);
+  const dObj = new Date(); dObj.setDate(dObj.getDate() + currentOffset);
+  const label = currentOffset===0 ? "Today" : dObj.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
+  document.getElementById('currentDate').textContent = label;
+
+  // Day type & banner
+  const banner = document.getElementById('protocolBanner');
+  const dayType = document.getElementById('dayType');
+  const wBadge = document.getElementById('workoutBadge');
+  const mBadge = document.getElementById('mealBadge');
+
+  document.getElementById('inclineDisplay').textContent = globalIncline + '%';
+  document.querySelectorAll('.inclineRef').forEach(el => el.textContent = globalIncline);
+
+  const aw = document.getElementById('activeWorkoutPanel');
+  const rw = document.getElementById('recoveryPanel');
+  const restw = document.getElementById('restPanel');
+  const nm = document.getElementById('normalMealPanel');
+  const cm = document.getElementById('cheatMealPanel');
+
+  if (dayName === 'Mon' || dayName === 'Wed' || dayName === 'Fri') {
+    dayType.textContent = 'Active Day (Mon/Wed/Fri)';
+    banner.className = 'protocol-banner';
+    banner.innerHTML = `<b>🔥 Active Day Protocol</b><br>Treadmill 6-3-30 (Incline ${globalIncline}%) → Swimming 10×50m. Posture guard: NO handrail.`;
+    wBadge.textContent = 'Mon/Wed/Fri'; wBadge.className = 'badge green';
+    aw.style.display='block'; rw.style.display='none'; restw.style.display='none';
+
+    const wcl = document.getElementById('workoutChecks');
+    wcl.innerHTML = '';
+    const checks = [
+      `Treadmill: 6-3-30 (Incline ${globalIncline}%, Speed 3mph, 30min)`,
+      "Posture Guard: Upright, NO handrail holding",
+      "Swimming: 10 laps × 50m, 30–45s rest per lap",
+      "Sequence: Treadmill → Swimming maintained",
+      "Zero joint/tendon pain today"
+    ];
+    checks.forEach((c,i) => {
+      const done = !!day.checks['w_'+i];
+      const div = document.createElement('div');
+      div.className = 'check-item' + (done?' done':'');
+      div.innerHTML = `<div class="check-box">${done?'✓':''}</div><div class="check-text">${escapeHtml(c)}</div>`;
+      div.onclick = () => { day.checks['w_'+i] = !done; save(); };
+      wcl.appendChild(div);
+    });
+
+    const wl = document.getElementById('workoutList');
+    wl.innerHTML = day.workouts.length ? '' : '<div class="empty">No workout logs yet</div>';
+    day.workouts.slice().reverse().forEach((m,idx) => {
+      const ri = day.workouts.length - 1 - idx;
+      const div = document.createElement('div'); div.className='list-item';
+      div.innerHTML = `<div>${escapeHtml(m.text)}<small>${m.time}</small></div><button onclick="delWorkout(${ri})">🗑️</button>`;
+      wl.appendChild(div);
+    });
+
+  } else if (dayName === 'Tue' || dayName === 'Thu' || dayName === 'Sat') {
+    dayType.textContent = 'Recovery Day (Tue/Thu/Sat)';
+    banner.className = 'protocol-banner recovery';
+    banner.innerHTML = '<b>🌿 Recovery Day Protocol</b><br>15–20 min casual walking (Zone 1) + 10 min stretch. Time-based, NOT step-count.';
+    wBadge.textContent = 'Tue/Thu/Sat'; wBadge.className = 'badge blue';
+    aw.style.display='none'; rw.style.display='block'; restw.style.display='none';
+
+    const rcl = document.getElementById('recoveryChecks');
+    rcl.innerHTML = '';
+    recoveryChecks.forEach((c,i) => {
+      const done = !!day.checks['r_'+i];
+      const div = document.createElement('div');
+      div.className = 'check-item' + (done?' done':'');
+      div.innerHTML = `<div class="check-box">${done?'✓':''}</div><div class="check-text">${escapeHtml(c)}</div>`;
+      div.onclick = () => { day.checks['r_'+i] = !done; save(); };
+      rcl.appendChild(div);
+    });
+
+    const rl = document.getElementById('recoveryList');
+    rl.innerHTML = day.recovery.length ? '' : '<div class="empty">No recovery logs yet</div>';
+    day.recovery.slice().reverse().forEach((m,idx) => {
+      const ri = day.recovery.length - 1 - idx;
+      const div = document.createElement('div'); div.className='list-item';
+      div.innerHTML = `<div>${escapeHtml(m.text)}<small>${m.time}</small></div><button onclick="delRecovery(${ri})">🗑️</button>`;
+      rl.appendChild(div);
+    });
+
+  } else {
+    dayType.textContent = 'Absolute Rest Day (Sun)';
+    banner.className = 'protocol-banner rest';
+    banner.innerHTML = '<b>🛌 Absolute Rest Day</b><br>100% Physical Off-day. Mental decompression only. No physical work.';
+    wBadge.textContent = 'Sunday'; wBadge.className = 'badge orange';
+    aw.style.display='none'; rw.style.display='none'; restw.style.display='block';
+
+    const rl = document.getElementById('restList');
+    rl.innerHTML = day.rest.length ? '' : '<div class="empty">Enjoy your rest</div>';
+    day.rest.slice().reverse().forEach((m,idx) => {
+      const ri = day.rest.length - 1 - idx;
+      const div = document.createElement('div'); div.className='list-item';
+      div.innerHTML = `<div>${escapeHtml(m.text)}<small>${m.time}</small></div><button onclick="delRest(${ri})">🗑️</button>`;
+      rl.appendChild(div);
+    });
+  }
+
+  // Meal panel
+  if (dayName === 'Sun') {
+    nm.style.display = 'none';
+    cm.style.display = 'block';
+    mBadge.textContent = 'Cheat Meal'; mBadge.className = 'badge orange';
+
+    const ccl = document.getElementById('cheatChecks');
+    ccl.innerHTML = '';
+    cheatChecks.forEach((c,i) => {
+      const done = !!day.cheatChecks[i];
+      const div = document.createElement('div');
+      div.className = 'check-item' + (done?' done':'');
+      div.innerHTML = `<div class="check-box">${done?'✓':''}</div><div class="check-text">${escapeHtml(c)}</div>`;
+      div.onclick = () => { day.cheatChecks[i] = !done; save(); };
+      ccl.appendChild(div);
+    });
+
+    const cml = document.getElementById('cheatMealList');
+    cml.innerHTML = day.cheatMeals.length ? '' : '<div class="empty">No cheat meals logged</div>';
+    day.cheatMeals.slice().reverse().forEach((m,idx) => {
+      const ri = day.cheatMeals.length - 1 - idx;
+      const div = document.createElement('div'); div.className='list-item';
+      div.innerHTML = `<div>${escapeHtml(m.text)}<small>${m.time}</small></div><button onclick="delCheat(${ri})">🗑️</button>`;
+      cml.appendChild(div);
+    });
+
+  } else {
+    nm.style.display = 'block';
+    cm.style.display = 'none';
+    mBadge.textContent = 'Target ' + calorieTarget; mBadge.className = 'badge green';
+
+    // Meal slots
+    MEAL_SLOTS.forEach(slot => {
+      const meal = day.meals[slot] || { text: '', calories: 0 };
+      document.getElementById('m' + slot.charAt(0).toUpperCase() + slot.slice(1) + 'Text').value = meal.text || '';
+      document.getElementById('m' + slot.charAt(0).toUpperCase() + slot.slice(1) + 'Cal').value = meal.calories || '';
+      document.getElementById('val' + slot.charAt(0).toUpperCase() + slot.slice(1)).textContent = meal.calories || 0;
+    });
+
+    // Elimination checks
+    const el = document.getElementById('eliminationChecks');
+    el.innerHTML = '';
+    eliminationItems.forEach((c,i) => {
+      const done = !!day.elimination[i];
+      const div = document.createElement('div');
+      div.className = 'check-item' + (done?' done':'');
+      div.innerHTML = `<div class="check-box">${done?'✓':''}</div><div class="check-text">${escapeHtml(c)}</div>`;
+      div.onclick = () => { day.elimination[i] = !done; save(); };
+      el.appendChild(div);
+    });
+  }
+
+  // Calorie bar
+  const dayTotal = getDayCalories(key);
+  const pct = Math.min(100, Math.round((dayTotal / calorieTarget) * 100));
+  const bar = document.getElementById('calorieBar');
+  const barText = document.getElementById('calorieBarText');
+  const summary = document.getElementById('calorieSummary');
+
+  bar.style.width = Math.min(100, pct) + '%';
+  barText.textContent = `${dayTotal} / ${calorieTarget} kcal`;
+
+  if (dayTotal > calorieTarget) {
+    bar.className = 'calorie-bar-fill over';
+    summary.innerHTML = `<span class="target">Target: ${calorieTarget.toLocaleString()} kcal</span><span class="actual over">+${(dayTotal - calorieTarget).toLocaleString()} over</span>`;
+  } else {
+    bar.className = 'calorie-bar-fill under';
+    summary.innerHTML = `<span class="target">Target: ${calorieTarget.toLocaleString()} kcal</span><span class="actual under">${dayTotal.toLocaleString()} consumed</span>`;
+  }
+
+  // Binge notes
+  const bn = document.getElementById('bingeNotesList');
+  bn.innerHTML = '';
+  day.bingeNotes.forEach((n,i) => {
+    const div = document.createElement('div'); div.className='list-item';
+    div.innerHTML = `<div>🚨 ${escapeHtml(n)}</div><button onclick="delBingeNote(${i})">🗑️</button>`;
+    bn.appendChild(div);
+  });
+
+  // Water
+  const waterPct = Math.min(100, Math.round((day.water / day.waterGoal) * 100));
+  document.getElementById('waterFill').style.width = waterPct + '%';
+  document.getElementById('waterText').textContent = `${day.water} / ${day.waterGoal} ml`;
+
+  // Sleep
+  document.getElementById('sleepBed').value = day.sleepBed || '';
+  document.getElementById('sleepWake').value = day.sleepWake || '';
+  const sc = document.getElementById('sleepCalc');
+  if (day.sleepBed && day.sleepWake) {
+    const [bh, bm] = day.sleepBed.split(':').map(Number);
+    const [wh, wm] = day.sleepWake.split(':').map(Number);
+    let bedMin = bh*60+bm, wakeMin = wh*60+wm;
+    if (wakeMin < bedMin) wakeMin += 24*60;
+    const hrs = ((wakeMin - bedMin)/60).toFixed(1);
+    const ok = hrs >= 7 && hrs <= 8;
+    sc.innerHTML = `Sleep duration: <b>${hrs}h</b> ${ok ? '✅ (7–8h target met)' : hrs<7 ? '⚠️ Below 7h' : '⚠️ Above 8h'}`;
+    sc.style.color = ok ? 'var(--accent)' : 'var(--danger)';
+  } else {
+    sc.textContent = 'Enter bedtime and wake time to calculate duration';
+    sc.style.color = 'var(--muted)';
+  }
+
+  // Daily habit checklist
+  const hcl = document.getElementById('sleepChecks');
+  hcl.innerHTML = '';
+  defaultHabits.forEach((h,i) => {
+    const done = !!day.checks['h_'+i];
+    const div = document.createElement('div');
+    div.className = 'check-item' + (done?' done':'');
+    div.innerHTML = `<div class="check-box">${done?'✓':''}</div><div class="check-text">${escapeHtml(h)}</div>`;
+    div.onclick = () => { day.checks['h_'+i] = !done; save(); };
+    hcl.appendChild(div);
+  });
+
+  // Notes
+  document.getElementById('dayNote').value = day.note || '';
+  document.getElementById('minimalistNote').style.display = 'none';
+}
+
+/* ==================== MEAL ACTIONS ==================== */
+function saveMeal(slot) {
+  const key = getDayKey(currentOffset);
+  const day = ensureDay(key);
+  const textId = 'm' + slot.charAt(0).toUpperCase() + slot.slice(1) + 'Text';
+  const calId = 'm' + slot.charAt(0).toUpperCase() + slot.slice(1) + 'Cal';
+  const text = document.getElementById(textId).value.trim();
+  const cal = parseInt(document.getElementById(calId).value) || 0;
+  day.meals[slot] = { text, calories: cal };
+  save();
+}
+function getDayCalories(key) {
+  const day = data[key];
+  if (!day || !day.meals) return 0;
+  let total = 0;
+  MEAL_SLOTS.forEach(slot => {
+    total += (day.meals[slot]?.calories || 0);
+  });
+  return total;
+}
+
+/* ==================== OTHER ACTIONS ==================== */
+function addWorkoutLog() {
+  const inp = document.getElementById('workoutInput');
+  const val = inp.value.trim(); if(!val) return;
+  const day = ensureDay(getDayKey(currentOffset));
+  day.workouts.push({text: val, time: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})});
+  inp.value=''; save();
+}
+function delWorkout(i) { const day = ensureDay(getDayKey(currentOffset)); day.workouts.splice(i,1); save(); }
+function addRecoveryLog() {
+  const inp = document.getElementById('recoveryInput');
+  const val = inp.value.trim(); if(!val) return;
+  const day = ensureDay(getDayKey(currentOffset));
+  day.recovery.push({text: val, time: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})});
+  inp.value=''; save();
+}
+function delRecovery(i) { const day = ensureDay(getDayKey(currentOffset)); day.recovery.splice(i,1); save(); }
+function addRestLog() {
+  const inp = document.getElementById('restInput');
+  const val = inp.value.trim(); if(!val) return;
+  const day = ensureDay(getDayKey(currentOffset));
+  day.rest.push({text: val, time: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})});
+  inp.value=''; save();
+}
+function delRest(i) { const day = ensureDay(getDayKey(currentOffset)); day.rest.splice(i,1); save(); }
+function triggerMinimalist() {
+  document.getElementById('minimalistNote').style.display = 'block';
+  const day = ensureDay(getDayKey(currentOffset));
+  day.workouts.push({text: "5-Min Minimalist Fallback: 10min flat walk, 0% incline. Streak maintained.", time: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})});
+  save();
+}
+
+function addCheatMeal() {
+  const inp = document.getElementById('cheatInput');
+  const val = inp.value.trim(); if(!val) return;
+  const day = ensureDay(getDayKey(currentOffset));
+  day.cheatMeals.push({text: val, time: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})});
+  inp.value=''; save();
+}
+function delCheat(i) { const day = ensureDay(getDayKey(currentOffset)); day.cheatMeals.splice(i,1); save(); }
+
+function addBingeNote() {
+  const inp = document.getElementById('bingeTriggerInput');
+  const val = inp.value.trim(); if(!val) return;
+  const day = ensureDay(getDayKey(currentOffset));
+  day.bingeNotes.push(val);
+  inp.value=''; save();
+}
+function delBingeNote(i) { const day = ensureDay(getDayKey(currentOffset)); day.bingeNotes.splice(i,1); save(); }
+
+function addWater(ml) {
+  const day = ensureDay(getDayKey(currentOffset));
+  day.water += ml;
+  save();
+}
+function setWaterGoal(goal) {
+  const day = ensureDay(getDayKey(currentOffset));
+  day.waterGoal = goal;
+  save();
+}
+function saveSleep() {
+  const day = ensureDay(getDayKey(currentOffset));
+  day.sleepBed = document.getElementById('sleepBed').value;
+  day.sleepWake = document.getElementById('sleepWake').value;
+  save();
+}
+function saveNote() {
+  const day = ensureDay(getDayKey(currentOffset));
+  day.note = document.getElementById('dayNote').value;
+  save();
+}
+
+/* ==================== WEEK REPORT ==================== */
+function getWeekBounds(offset) {
+  const now = new Date();
+  now.setDate(now.getDate() + (offset * 7));
+  const day = now.getDay();
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1); // Monday start
+  const monday = new Date(now); monday.setDate(diff);
+  const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
+  return { monday, sunday };
+}
+function formatDate(d) {
+  return d.toISOString().split('T')[0];
+}
+function renderWeek() {
+  const { monday, sunday } = getWeekBounds(weekOffset);
+  const weekLabel = `${monday.toLocaleDateString(undefined,{month:'short',day:'numeric'})} – ${sunday.toLocaleDateString(undefined,{month:'short',day:'numeric'})}`;
+  document.getElementById('weekLabel').textContent = weekLabel;
+
+  const tbody = document.getElementById('weekTableBody');
+  tbody.innerHTML = '';
+
+  let weekTotal = 0;
+  let daysWithData = 0;
+  let daysOver = 0;
+  let daysUnder = 0;
+  let daysOnTarget = 0;
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday); d.setDate(monday.getDate() + i);
+    const key = formatDate(d);
+    const dayName = DAYS[d.getDay()];
+    const day = data[key];
+    const cals = getDayCalories(key);
+    const hasData = day && (cals > 0 || day.workouts?.length || day.note);
+
+    if (hasData) {
+      daysWithData++;
+      weekTotal += cals;
+      if (cals > calorieTarget) daysOver++;
+      else if (cals < calorieTarget * 0.9) daysUnder++;
+      else daysOnTarget++;
+    }
+
+    const tr = document.createElement('tr');
+    const diff = cals - calorieTarget;
+    const diffClass = diff > 0 ? 'over' : diff < -200 ? 'under' : 'good';
+    const diffText = diff > 0 ? `+${diff}` : diff;
+
+    const mealCount = day ? MEAL_SLOTS.filter(s => day.meals[s]?.text).length : 0;
+
+    tr.innerHTML = `
+      <td><b>${dayName}</b> ${d.getDate()}</td>
+      <td>${hasData ? mealCount + ' meals' : '—'}</td>
+      <td>${hasData ? cals.toLocaleString() : '—'}</td>
+      <td class="${diffClass}">${hasData ? diffText : '—'}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  const weeklyTarget = calorieTarget * 7;
+  const diff = weekTotal - weeklyTarget;
+
+  document.getElementById('wkTotal').textContent = weekTotal.toLocaleString();
+  document.getElementById('wkAvg').textContent = daysWithData ? Math.round(weekTotal / daysWithData).toLocaleString() : '0';
+  document.getElementById('wkTarget').textContent = weeklyTarget.toLocaleString();
+  document.getElementById('wkDiff').textContent = (diff > 0 ? '+' : '') + diff.toLocaleString();
+  document.getElementById('wkDiff').style.color = diff > 0 ? 'var(--danger)' : diff < 0 ? 'var(--accent2)' : 'var(--accent)';
+
+  const summary = document.getElementById('weekSummary');
+  summary.innerHTML = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:0.82rem">
+      <span style="background:#d1fae5;color:#065f46;padding:4px 12px;border-radius:20px">✅ On target: ${daysOnTarget} days</span>
+      <span style="background:#fee2e2;color:#991b1b;padding:4px 12px;border-radius:20px">🔥 Over: ${daysOver} days</span>
+      <span style="background:#dbeafe;color:#1e40af;padding:4px 12px;border-radius:20px">📉 Under: ${daysUnder} days</span>
+    </div>
+  `;
+}
+
+/* ==================== SETTINGS ==================== */
+function renderSettings() {
+  document.getElementById('settingsIncline').textContent = globalIncline + '%';
+  document.getElementById('calTargetInput').value = calorieTarget;
+  document.getElementById('weeklyTargetDisplay').textContent = (calorieTarget * 7).toLocaleString();
+}
+function adjustIncline(delta) {
+  globalIncline = Math.max(6, Math.min(12, globalIncline + delta));
+  save();
+  renderSettings();
+}
+function setGlobalWaterGoal(goal) {
+  globalWaterGoal = goal;
+  save();
+}
+function setCalorieTarget(val) {
+  calorieTarget = parseInt(val) || 2200;
+  save();
+  renderSettings();
+}
+
+/* ==================== PROGRESS ==================== */
+function renderProgress() {
+  const keys = Object.keys(data).filter(k => !k.startsWith('_'));
+  let workouts=0, meals=0, waterTotal=0, waterDays=0, sleepOk=0;
+
+  keys.forEach(k => {
+    const d = data[k];
+    if (d.workouts && d.workouts.length) workouts++;
+    const mealCount = MEAL_SLOTS.filter(s => d.meals?.[s]?.text).length;
+    if (mealCount) meals += mealCount;
+    if (d.water > 0) { waterTotal += d.water; waterDays++; }
+    if (d.sleepBed && d.sleepWake) {
+      const [bh, bm] = d.sleepBed.split(':').map(Number);
+      const [wh, wm] = d.sleepWake.split(':').map(Number);
+      let bedMin = bh*60+bm, wakeMin = wh*60+wm;
+      if (wakeMin < bedMin) wakeMin += 24*60;
+      const hrs = (wakeMin - bedMin)/60;
+      if (hrs >= 7 && hrs <= 8) sleepOk++;
+    }
+  });
+
+  document.getElementById('stWorkouts').textContent = workouts;
+  document.getElementById('stMeals').textContent = meals;
+  document.getElementById('stWater').textContent = waterDays ? (waterTotal/waterDays/1000).toFixed(1) : '0';
+  document.getElementById('stSleep').textContent = sleepOk;
+
+  const cl = document.getElementById('complianceList');
+  cl.innerHTML = '';
+  const sorted = keys.sort().reverse().slice(0, 14);
+  sorted.forEach(k => {
+    const d = data[k];
+    const dayName = new Date(k).getDay();
+    const isActive = dayName===1||dayName===3||dayName===5;
+    const isRecovery = dayName===2||dayName===4||dayName===6;
+    const isRest = dayName===0;
+
+    let status = [];
+    if (isActive && d.workouts && d.workouts.length) status.push('✅ Workout');
+    else if (isActive) status.push('❌ No workout');
+    if (isRecovery && d.recovery && d.recovery.length) status.push('✅ Recovery');
+    else if (isRecovery) status.push('❌ No recovery');
+    const mealCount = MEAL_SLOTS.filter(s => d.meals?.[s]?.text).length;
+    if (mealCount) status.push(`${mealCount} meals`);
+    const cals = getDayCalories(k);
+    if (cals > 0) status.push(`${cals} kcal`);
+    const waterPct = d.waterGoal ? Math.round(d.water/d.waterGoal*100) : 0;
+    status.push(`💧 ${waterPct}%`);
+
+    const div = document.createElement('div'); div.className='list-item';
+    div.innerHTML = `<div><strong>${k}</strong><small>${status.join(' • ')}</small></div>`;
+    cl.appendChild(div);
+  });
+
+  const hl = document.getElementById('historyList');
+  hl.innerHTML = keys.length ? '' : '<div class="empty">No history yet</div>';
+  keys.sort().reverse().forEach(k => {
+    const d = data[k];
+    const cals = getDayCalories(k);
+    const hasData = cals > 0 || (d.workouts&&d.workouts.length)||(d.recovery&&d.recovery.length)||(d.rest&&d.rest.length)||d.note||d.water>0;
+    if (!hasData) return;
+    const div = document.createElement('div'); div.className='list-item';
+    const parts = [];
+    if (d.workouts && d.workouts.length) parts.push(`${d.workouts.length} workouts`);
+    if (d.recovery && d.recovery.length) parts.push(`${d.recovery.length} recovery`);
+    if (cals > 0) parts.push(`${cals} kcal`);
+    if (d.water) parts.push(`${d.water}ml water`);
+    div.innerHTML = `<div><strong>${k}</strong><small>${parts.join(' • ') || 'Note only'}</small></div>`;
+    hl.appendChild(div);
+  });
+}
+
+/* ==================== BACKUP ==================== */
+function downloadBackup() {
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'protocol-backup-' + new Date().toISOString().split('T')[0] + '.json';
+  a.click(); URL.revokeObjectURL(url);
+}
+function uploadBackup(e) {
+  const file = e.target.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      data = JSON.parse(ev.target.result);
+      if (data._settings) {
+        globalIncline = data._settings.incline || 6;
+        globalWaterGoal = data._settings.waterGoal || 4000;
+        calorieTarget = data._settings.calorieTarget || 2200;
+      }
+      save(); alert('Backup restored!');
+    } catch { alert('Invalid backup file'); }
+  };
+  reader.readAsText(file);
+  e.target.value='';
+}
+
+function escapeHtml(t) {
+  const div = document.createElement('div'); div.textContent = t; return div.innerHTML;
+}
+
+render();
+</script>
+</body>
+</html>
